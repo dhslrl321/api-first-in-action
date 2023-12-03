@@ -1,0 +1,7 @@
+.openapi-generator-ignore
+README.md
+java/com/github/dhslrl321/oas/api/ApiUtil.java
+java/com/github/dhslrl321/oas/api/PetsApi.java
+java/com/github/dhslrl321/oas/model/CreatePetData.java
+java/com/github/dhslrl321/oas/model/Error.java
+pom.xml

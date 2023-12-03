@@ -1,0 +1,78 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.0'
+    id 'io.spring.dependency-management' version '1.1.4'
+
+    id "org.openapi.generator" version "6.5.0"
+    id "com.diffplug.eclipse.apt" version "3.26.0"
+}
+
+group = 'com.github.dhslrl321'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = '17'
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    //  3. openapi generator 적용을 위한 정보
+    implementation 'org.openapitools:openapi-generator:6.5.0'
+	implementation "org.openapitools:openapi-generator-gradle-plugin:6.5.0"
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+def baseDir = "$projectDir/src/api-spec"
+
+def specDir = "$baseDir/spec"
+def generatedOutputBaseDir = "$baseDir/.generated"
+def specFilename = "api-spec.yaml"
+
+def oasConfigPath = "$specDir/$specFilename"
+
+openApiGenerate {
+
+    generatorName.set("spring") // spring codegen 을 명시
+    library.set("spring-boot") // spring boot 를 사용하라고
+
+    inputSpec.set(project.file(oasConfigPath).absolutePath)
+    outputDir.set(project.file(generatedOutputBaseDir).absolutePath)
+    apiPackage.set("com.github.dhslrl321.oas.api")
+    modelPackage.set("com.github.dhslrl321.oas.model")
+    configOptions.set(
+            [
+                    interfaceOnly: "true",
+                    useBeanValidation: "true",
+                    performBeanValidation: "true",
+                    serializableModel: "true",
+                    sourceFolder: "/src",
+                    implFolder: "/src",
+            ]
+    )
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java', 'build/generated-sources/src']
+        }
+    }
+}
