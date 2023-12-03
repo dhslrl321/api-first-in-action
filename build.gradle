@@ -3,8 +3,8 @@ plugins {
     id 'org.springframework.boot' version '3.2.0'
     id 'io.spring.dependency-management' version '1.1.4'
 
-    id "org.openapi.generator" version "6.5.0"
-    id "com.diffplug.eclipse.apt" version "3.26.0"
+    id "org.openapi.generator" version "7.1.0"
+    id 'project-report'
 }
 
 group = 'com.github.dhslrl321'
@@ -30,41 +30,55 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
 
     //  3. openapi generator 적용을 위한 정보
-    implementation 'org.openapitools:openapi-generator:6.5.0'
-	implementation "org.openapitools:openapi-generator-gradle-plugin:6.5.0"
+    implementation('org.openapitools:openapi-generator-gradle-plugin:7.1.0') {
+        exclude group: 'org.slf4j', module: 'slf4j-simple'
+    }
+
+    implementation 'io.swagger.core.v3:swagger-annotations:2.2.19'
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
+
+    implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
 }
 
 tasks.named('test') {
     useJUnitPlatform()
 }
 
+// oas dir
+
 def baseDir = "$projectDir/src/api-spec"
-
-def specDir = "$baseDir/spec"
-def generatedOutputBaseDir = "$baseDir/.generated"
+def apiSpecDir = "$baseDir/spec"
 def specFilename = "api-spec.yaml"
+def apiSpecPath = "$apiSpecDir/$specFilename"
 
-def oasConfigPath = "$specDir/$specFilename"
+def generatedOutputBaseDir = "$baseDir/.oas-generated"
 
-openApiGenerate {
+// validation
+compileJava.dependsOn tasks.openApiValidate
+openApiValidate { // task 1. validation
+    inputSpec.set(apiSpecPath)
+}
+
+
+openApiGenerate { // task 2. generate
 
     generatorName.set("spring") // spring codegen 을 명시
     library.set("spring-boot") // spring boot 를 사용하라고
 
-    inputSpec.set(project.file(oasConfigPath).absolutePath)
+    inputSpec.set(project.file(apiSpecPath).absolutePath)
     outputDir.set(project.file(generatedOutputBaseDir).absolutePath)
     apiPackage.set("com.github.dhslrl321.oas.api")
     modelPackage.set("com.github.dhslrl321.oas.model")
     configOptions.set(
             [
-                    interfaceOnly: "true",
-                    useBeanValidation: "true",
-                    performBeanValidation: "true",
+                    interfaceOnly    : "true",
+                    useSpringBoot3   : "true",
                     serializableModel: "true",
-                    sourceFolder: "/src",
-                    implFolder: "/src",
+                    sourceFolder     : "/src",
+                    implFolder       : "/src",
             ]
     )
 }
@@ -72,7 +86,16 @@ openApiGenerate {
 sourceSets {
     main {
         java {
-            srcDirs = ['src/main/java', 'build/generated-sources/src']
+            srcDirs = ['src/main/java', generatedOutputBaseDir + '/src']
         }
     }
 }
+
+tasks.register('cleanOasGenerated', Delete) {
+    delete project.file(generatedOutputBaseDir).absolutePath
+}
+
+clean.dependsOn cleanOasGenerated
+
+
+compileJava.dependsOn tasks.openApiGenerate
