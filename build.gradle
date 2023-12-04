@@ -1,5 +1,7 @@
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+
 plugins {
-    id 'java'
+    id 'java-library'
     id 'org.springframework.boot' version '3.2.0'
     id 'io.spring.dependency-management' version '1.1.4'
 
@@ -54,48 +56,58 @@ tasks.named('test') {
 
 // oas dir
 
+
 def baseDir = "$projectDir/src/api-spec"
+
 def apiSpecDir = "$baseDir/spec"
-def specFilename = "api-spec.yaml"
-def apiSpecPath = "$apiSpecDir/$specFilename"
+def docsDir = "$baseDir/docs"
+def generatedDir = "$baseDir/.generated"
 
-def generatedOutputBaseDir = "$baseDir/.oas-generated"
+def configPath = "$apiSpecDir/config.json"
+def specPath = "$apiSpecDir/api-spec.yaml"
 
-def configDir = "$baseDir/config"
-def configPath = "$configDir/config.yml"
+def docsResourceDir = "$generatedDir/src/main/resources/docs"
+
 
 // validation
-compileJava.dependsOn tasks.openApiValidate
 openApiValidate { // task 1. validation
-    inputSpec.set(apiSpecPath)
+    inputSpec.set(specPath)
+    recommend.set(true)
 }
 
-compileJava.dependsOn tasks.openApiGenerate
+
 
 openApiGenerate { // task 2. generate
-
     generatorName.set("spring") // spring codegen 을 명시
-    library.set("spring-boot") // spring boot 를 사용하라고
-
-    inputSpec.set(apiSpecPath)
-    outputDir.set(generatedOutputBaseDir)
-    apiPackage.set("com.github.dhslrl321.oas.api")
-    modelPackage.set("com.github.dhslrl321.oas.model")
+    inputSpec.set(specPath)
+    outputDir.set(generatedDir)
     configFile.set(configPath) // configOptions 를 통해 gradle file 에서 직접 지정할 수도 있긴 함
 }
 
-sourceSets {
-    main {
-        java {
-            srcDirs = ['src/main/java', generatedOutputBaseDir + '/src']
-        }
+tasks.named("openApiGenerate") {
+    it.dependsOn("openApiValidate")
+    it.dependsOn("openApiGenernalHtmlGenerate")
+    doFirst {
+        def javaSourceDir = "$generatedDir/src/main/java";
     }
 }
 
-// gradle clean 시 spec file 제거
-tasks.register('cleanOasGenerated', Delete) {
-    delete project.file(generatedOutputBaseDir).absolutePath
+// swagger ui routing
+task openApiGenernalHtmlGenerate(type: GenerateTask) {
+    inputSpec.set(specPath)
+    generatorName.set("html2")
+    outputDir.set("$docsResourceDir/html")
 }
 
-clean.dependsOn cleanOasGenerated
+tasks.compileJava.dependsOn tasks.openApiValidate, tasks.openApiGenerate, tasks.openApiGenernalHtmlGenerate
+
+sourceSets.main.java.srcDir "${openApiGenerate.outputDir.get()}/src/main/java"
+sourceSets.main.resources.srcDir "${openApiGenerate.outputDir.get()}/src/main/resources"
+
+/*// gradle clean 시 spec file 제거
+tasks.register('cleanOasGenerated', Delete) {
+    delete project.file(generatedDir).absolutePath
+}
+
+clean.dependsOn cleanOasGenerated*/
 

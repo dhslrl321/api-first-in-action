@@ -1,0 +1,21 @@
+{
+  "library": "spring-boot",
+  "documentationProvider": "none",
+  "interfaceOnly": true,
+  "basePackage": "com.github.dhslrl321.oas",
+  "modelPackage": "com.github.dhslrl321.oas.model",
+  "apiPackage": "com.github.dhslrl321.oas.api",
+  "useTags": true,
+  "skipDefaultInterface": true,
+  "dateLibrary": "java11",
+  "useBeanValidation": true,
+  "serializableModel": true,
+  "implicitHeaders": false,
+  "swaggerDocketConfig": false,
+  "hideGenerationTimestamp": false,
+  "useSpringfox": false,
+  "reactive": false,
+  "openApiNullable": false,
+  "enumPropertyNaming": "original",
+  "useSpringBoot3": true
+}

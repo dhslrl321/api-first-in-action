@@ -8,6 +8,6 @@ public class TodoApiController implements PetsApi {
 
     @Override
     public ResponseEntity<Void> createPets(CreatePetData createPetData) {
-        return PetsApi.super.createPets(createPetData);
+        return null;
     }
 }
