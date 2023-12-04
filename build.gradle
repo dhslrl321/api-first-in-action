@@ -26,14 +26,19 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui
+    implementation 'org.springdoc:springdoc-openapi-ui:1.7.0'
+
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    //  3. openapi generator 적용을 위한 정보
+    // openapi generator 적용을 위한 정보
     implementation('org.openapitools:openapi-generator-gradle-plugin:7.1.0') {
         exclude group: 'org.slf4j', module: 'slf4j-simple'
     }
 
+    // generation 에 필요한 의존성 정보들
     implementation 'io.swagger.core.v3:swagger-annotations:2.2.19'
     implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
 
@@ -56,31 +61,27 @@ def apiSpecPath = "$apiSpecDir/$specFilename"
 
 def generatedOutputBaseDir = "$baseDir/.oas-generated"
 
+def configDir = "$baseDir/config"
+def configPath = "$configDir/config.yml"
+
 // validation
 compileJava.dependsOn tasks.openApiValidate
 openApiValidate { // task 1. validation
     inputSpec.set(apiSpecPath)
 }
 
+compileJava.dependsOn tasks.openApiGenerate
 
 openApiGenerate { // task 2. generate
 
     generatorName.set("spring") // spring codegen 을 명시
     library.set("spring-boot") // spring boot 를 사용하라고
 
-    inputSpec.set(project.file(apiSpecPath).absolutePath)
-    outputDir.set(project.file(generatedOutputBaseDir).absolutePath)
+    inputSpec.set(apiSpecPath)
+    outputDir.set(generatedOutputBaseDir)
     apiPackage.set("com.github.dhslrl321.oas.api")
     modelPackage.set("com.github.dhslrl321.oas.model")
-    configOptions.set(
-            [
-                    interfaceOnly    : "true",
-                    useSpringBoot3   : "true",
-                    serializableModel: "true",
-                    sourceFolder     : "/src",
-                    implFolder       : "/src",
-            ]
-    )
+    configFile.set(configPath) // configOptions 를 통해 gradle file 에서 직접 지정할 수도 있긴 함
 }
 
 sourceSets {
@@ -91,11 +92,10 @@ sourceSets {
     }
 }
 
+// gradle clean 시 spec file 제거
 tasks.register('cleanOasGenerated', Delete) {
     delete project.file(generatedOutputBaseDir).absolutePath
 }
 
 clean.dependsOn cleanOasGenerated
 
-
-compileJava.dependsOn tasks.openApiGenerate

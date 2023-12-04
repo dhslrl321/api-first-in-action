@@ -1,0 +1,14 @@
+# https://openapi-generator.tech/docs/globals
+
+interfaceOnly: "true"
+useSpringBoot3: "true"
+serializableModel: "true"
+sourceFolder: "/src"
+implFolder: "/src"
+apiDocs: "true"
+modelDocs: "true"
+useSwaggerUI: "true"
+
+# https://springdoc.org/#swagger-ui-properties
+springfox:
+  enable: true
