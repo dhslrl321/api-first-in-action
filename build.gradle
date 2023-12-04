@@ -69,11 +69,11 @@ openApiGenerate { // task 2. generate
 tasks.named("openApiGenerate") {
     it.dependsOn("openApiValidate")
     it.dependsOn("openApiGenernalHtmlGenerate")
-    doFirst {
-        def javaSourceDir = "$projectDir/src/api-spec/.generated/src/main/java";
-    }
 }
 
+processResources {
+    dependsOn tasks.named("openApiGenerate")
+}
 // swagger ui routing
 tasks.register('openApiGenernalHtmlGenerate', GenerateTask) {
     inputSpec.set("$projectDir/src/api-spec/spec/api-spec.yaml")
@@ -85,5 +85,3 @@ tasks.compileJava.dependsOn tasks.openApiGenerate, tasks.openApiGenernalHtmlGene
 
 sourceSets.main.java.srcDir "${openApiGenerate.outputDir.get()}/src/main/java"
 sourceSets.main.resources.srcDir "${openApiGenerate.outputDir.get()}/src/main/resources"
-
-
