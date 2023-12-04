@@ -54,60 +54,36 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-// oas dir
-
-
-def baseDir = "$projectDir/src/api-spec"
-
-def apiSpecDir = "$baseDir/spec"
-def docsDir = "$baseDir/docs"
-def generatedDir = "$baseDir/.generated"
-
-def configPath = "$apiSpecDir/config.json"
-def specPath = "$apiSpecDir/api-spec.yaml"
-
-def docsResourceDir = "$generatedDir/src/main/resources/docs"
-
-
-// validation
 openApiValidate { // task 1. validation
-    inputSpec.set(specPath)
+    inputSpec.set("$projectDir/src/api-spec/spec/api-spec.yaml")
     recommend.set(true)
 }
 
-
-
 openApiGenerate { // task 2. generate
     generatorName.set("spring") // spring codegen 을 명시
-    inputSpec.set(specPath)
-    outputDir.set(generatedDir)
-    configFile.set(configPath) // configOptions 를 통해 gradle file 에서 직접 지정할 수도 있긴 함
+    inputSpec.set("$projectDir/src/api-spec/spec/api-spec.yaml")
+    outputDir.set("$projectDir/src/api-spec/.generated")
+    configFile.set("$projectDir/src/api-spec/spec/config.json") // configOptions 를 통해 gradle file 에서 직접 지정할 수도 있긴 함
 }
 
 tasks.named("openApiGenerate") {
     it.dependsOn("openApiValidate")
     it.dependsOn("openApiGenernalHtmlGenerate")
     doFirst {
-        def javaSourceDir = "$generatedDir/src/main/java";
+        def javaSourceDir = "$projectDir/src/api-spec/.generated/src/main/java";
     }
 }
 
 // swagger ui routing
-task openApiGenernalHtmlGenerate(type: GenerateTask) {
-    inputSpec.set(specPath)
+tasks.register('openApiGenernalHtmlGenerate', GenerateTask) {
+    inputSpec.set("$projectDir/src/api-spec/spec/api-spec.yaml")
     generatorName.set("html2")
-    outputDir.set("$docsResourceDir/html")
+    outputDir.set("$projectDir/src/api-spec/.generated/src/main/resources/docs/html")
 }
 
-tasks.compileJava.dependsOn tasks.openApiValidate, tasks.openApiGenerate, tasks.openApiGenernalHtmlGenerate
+tasks.compileJava.dependsOn tasks.openApiGenerate, tasks.openApiGenernalHtmlGenerate
 
 sourceSets.main.java.srcDir "${openApiGenerate.outputDir.get()}/src/main/java"
 sourceSets.main.resources.srcDir "${openApiGenerate.outputDir.get()}/src/main/resources"
 
-/*// gradle clean 시 spec file 제거
-tasks.register('cleanOasGenerated', Delete) {
-    delete project.file(generatedDir).absolutePath
-}
-
-clean.dependsOn cleanOasGenerated*/
 
