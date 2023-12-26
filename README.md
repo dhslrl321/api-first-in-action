@@ -2,7 +2,7 @@
 
 [what is api first design - postman](https://www.postman.com/api-first/)
 
-### Reference Documentation
+# Reference Documentation
 
 For further reference, please consider the following sections:
 
